@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <script src="../../node_modules/markdown-it/dist/markdown-it.js"></script>
+    <script src="../../dist/index.js"></script>
+    <script>
+      const text = `#1 \n## 2`;
+      const md = window.markdownit({breaks: true, html: true});
+      md.use(window.markdownitLineNumber, {
+        startLine: 'data-line'
+      });
+      const result = md.render(text);
+      
+      document.write(result);
+    </script>
+  </head>
+  <body></body>
+</html>

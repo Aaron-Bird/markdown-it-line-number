@@ -1,0 +1,22 @@
+{
+  "name": "markdown-it-line-number",
+  "version": "0.1.0",
+  "description": "The markdown-it plugin for adding line numbers",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "rollup -w -c rollup.config.js",
+    "build": "rollup -c rollup.config.js",
+    "test": "mocha"
+  },
+  "author": "Aaron-Bird",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^22.0.0",
+    "@rollup/plugin-node-resolve": "^13.3.0",
+    "chai": "^4.3.6",
+    "jsdom": "^19.0.0",
+    "markdown-it": "^13.0.1",
+    "mocha": "^10.0.0",
+    "rollup": "^2.72.1"
+  },
+  "license": "MIT"
+}
