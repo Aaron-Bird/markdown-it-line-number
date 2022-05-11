@@ -6,8 +6,13 @@
   "scripts": {
     "dev": "rollup -w -c rollup.config.js",
     "build": "rollup -c rollup.config.js",
-    "test": "mocha"
+    "test": "mocha -- --watch"
   },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:Aaron-Bird/markdown-it-line-number.git"
+  },
+  "homepage": "https://github.com/Aaron-Bird/markdown-it-line-number",
   "author": "Aaron-Bird",
   "devDependencies": {
     "@rollup/plugin-commonjs": "^22.0.0",

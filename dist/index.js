@@ -8,14 +8,15 @@
     startLine: 'data-line',
     endLine: 'data-end-line',
     codeBlock: true,
+    codeInline: true,
     htmlBlock: true,
+    text: true,
   };
 
   var src = function markdownitLineNumber(md, option = {}) {
     option = Object.assign({}, initOption, option);
 
-    const keys = Object.keys(md.renderer.rules);
-    const rules = {};
+    Object.keys(md.renderer.rules);
 
     if (option.codeBlock) {
       md.renderer.rules.code_block = function codeBlockRenderer(tokens, idx, options, env, slf) {
@@ -29,13 +30,11 @@
               const startLineAttr = lineAttr(option.startLine, startLine + i);
               lineContent = `<span ${startLineAttr}>${lineContent}</span>`;
             }
-            return lineContent
+            return lineContent;
           })
           .join('\n');
 
-        return '<pre' + slf.renderAttrs(token) + '><code>' +
-          codeInner +
-          '</code></pre>\n';
+        return `<pre ${slf.renderAttrs(token)}><code>${codeInner}</code></pre>\n`;
       };
     }
 
@@ -47,11 +46,11 @@
           .split('\n')
           .map((lineContent, i) => {
             if (!lineContent.length) {
-              return lineContent
+              return lineContent;
             }
 
             const startLineAttr = lineAttr(option.startLine, startLine + i);
-            // todo: Use AST parse 
+            // todo: Use AST parse
             if (/(<[^</]+?)(>)/.test(lineContent)) {
               // <div> -> <div data-line="0">
               lineContent = lineContent.replace(/(<[^</]+?)(>)/, `$1 ${startLineAttr}$2`);
@@ -62,65 +61,58 @@
               // abc</div> -> <span data-line="1">abc</span></div>
               lineContent = lineContent.replace(/([^<]+?)(<[^<]+?>)/, `<span ${startLineAttr}>$1</span>$2`);
             }
-            return lineContent
+            return lineContent;
           })
           .join('\n');
-        return `<div ${slf.renderAttrs(token)}>${content}</div>`
+        return `<div ${slf.renderAttrs(token)}>${content}</div>`;
       };
     }
 
-    keys.forEach((key) => {
-      rules[key] = md.renderer.rules[key];
-
-      md.renderer.rules[key] = function rendererRuleProxy(...args) {
-        let result = rules[key].apply(this, args);
-
-        const [tokens, idx] = args;
+    if (option.text) {
+      md.renderer.rules.text = function (tokens, idx) {
         const token = tokens[idx];
-
-        if (typeof result === 'string' && !/<[^<]*?>/g.test(result)) {
-          // token.type === 'text' 
-          result = `<span ${lineAttr(option.startLine, token._line)}>${result}</span>`;
+        const escapeHtml = md.utils.escapeHtml;
+        if (token.content) {
+          return `<span ${lineAttr(option.startLine, token._line)}>${escapeHtml(token.content)}</span>`;
+        } else {
+          return token.content;
         }
-
-        return result
       };
-    });
+    }
 
-    const _render = md.renderer.render;
-    md.renderer.render = function renderProxy(...args) {
-      const [tokens] = args;
-      if (Array.isArray(tokens)) {
-        tokens.forEach((token) => {
-          if (!Array.isArray(token.map)) {
-            return
-          }
-
-          token.attrPush([option.startLine, token.map[0]]);
-          // token.attrPush([option.endLine, token.map[1]])
-
-          const children = token.children;
-          if (token.type === 'inline' && Array.isArray(children)) {
-            let line = token.map[0];
-            children.forEach((inlineToken, index) => {
-              if (inlineToken.type && inlineToken.type.indexOf('break') > -1) {
-                line += 1;
-              }
-
-              inlineToken._line = line;
-              inlineToken.attrPush([option.startLine, line]);
-            });
-          }
-        });
+    md.core.ruler.push('inline_number', function (state) {
+      const { tokens } = state;
+      if (!Array.isArray(tokens)) {
+        return;
       }
 
-      const result = _render.apply(this, args);
-      return result
-    };
+      tokens.forEach((token) => {
+        if (!Array.isArray(token.map) || token.map[0] == undefined) {
+          return;
+        }
+
+        token.attrPush([option.startLine, token.map[0]]);
+        // token.attrPush([option.endLine, token.map[1]]);
+
+        const children = token.children;
+
+        if (token.type === 'inline' && Array.isArray(children)) {
+          let line = token.map[0];
+          children.forEach((inlineToken, index) => {
+            if (inlineToken.type && inlineToken.type.indexOf('break') > -1) {
+              line += 1;
+            }
+
+            inlineToken._line = line;
+            inlineToken.attrPush([option.startLine, line]);
+          });
+        }
+      });
+    });
   };
 
   function lineAttr(name, value) {
-    return value != null ? `${name}="${value}"` : ""
+    return value != null ? `${name}="${value}"` : '';
   }
 
   return src;

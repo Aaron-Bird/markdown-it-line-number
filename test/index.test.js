@@ -1,36 +1,63 @@
-const markdownit = require("markdown-it");
-const markdownitLineNumber = require("../src");
-const expect = require("chai").expect;
-const JSDOM = require("jsdom").JSDOM;
+const markdownit = require('markdown-it');
+const markdownitLineNumber = require('../src');
+const expect = require('chai').expect;
+const JSDOM = require('jsdom').JSDOM;
 const md = markdownit();
 md.use(markdownitLineNumber);
 
 function renderDom(text) {
-  const html = md.render(text)
-  return new JSDOM(html).window.document.body
+  const html = md.render(text);
+  return new JSDOM(html).window.document.body;
 }
 
-describe("block test", function() {
-  it("header", function() {
-    const el = renderDom(`# 1\n## 2`)
-    const children = el.children
-    expect(children[0].getAttribute('data-line')).to.be.equal('0')
-    expect(children[1].getAttribute('data-line')).to.be.equal('1')
-  })
-})
+describe('block', function () {
+  it('header', function () {
+    const el = renderDom('\n# 1\n## 2');
+    expect(el.querySelector('h1').getAttribute('data-line')).to.be.equal('1');
+    expect(el.querySelector('h2').getAttribute('data-line')).to.be.equal('2');
+  });
+});
 
-describe("inline test", function() {
-  it("text", function() {
-    const el = renderDom(`a  \nb`).firstChild
-    expect(el.getAttribute('data-line')).to.be.equal('0')
-    const children = el.children
-    expect(children[0].tagName).to.be.equal('SPAN')
-    expect(children[0].getAttribute('data-line')).to.be.equal('0')
-    
-    expect(children[1].tagName).to.be.equal('BR')
-    expect(children[1].getAttribute('data-line')).to.not.exist
+describe('inline', function () {
+  it('link', function () {
+    const el = renderDom('\n[example](https://example.com)');
+    expect(el.querySelector('a').getAttribute('data-line')).to.be.equal('1');
+  });
 
-    expect(children[2].tagName).to.be.equal('SPAN')
-    expect(children[2].getAttribute('data-line')).to.be.equal('1')
-  })
-})
+  it('autolink', function () {
+    const el = renderDom('\n<https://example.com>');
+    expect(el.querySelector('a').getAttribute('data-line')).to.be.equal('1');
+  });
+
+  it('bold', function () {
+    const el = renderDom('\n**a  \nb**');
+    const spans = el.querySelectorAll('strong span');
+    expect(spans[0].getAttribute('data-line')).to.be.equal('1');
+    expect(spans[1].getAttribute('data-line')).to.be.equal('2');
+  });
+
+  it('italic', function () {
+    const el = renderDom('\n*a  \nb*');
+    const spans = el.querySelectorAll('em span');
+    expect(spans[0].getAttribute('data-line')).to.be.equal('1');
+    expect(spans[1].getAttribute('data-line')).to.be.equal('2');
+  });
+
+  it('image', function () {
+    const el = renderDom('\n![example](https://example.com "title")');
+    expect(el.querySelector('img').getAttribute('data-line')).to.be.equal('1');
+  });
+
+  it('strike through', function () {
+    const el = renderDom('\n ~~a~~');
+    expect(el.querySelector('s').getAttribute('data-line')).to.be.equal('1');
+  });
+
+  it('text', function () {
+    const el = renderDom('\na  \nb\n\nc');
+    const spans = el.querySelectorAll('span');
+    expect(spans[0].getAttribute('data-line')).to.be.equal('1');
+    expect(spans[1].getAttribute('data-line')).to.be.equal('2');
+    expect(spans[2].getAttribute('data-line')).to.be.equal('4');
+  });
+});

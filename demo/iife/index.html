@@ -8,7 +8,7 @@
     <script src="../../node_modules/markdown-it/dist/markdown-it.js"></script>
     <script src="../../dist/index.js"></script>
     <script>
-      const text = `#1 \n## 2`;
+      const text = `# 1 \n## 2`;
       const md = window.markdownit({breaks: true, html: true});
       md.use(window.markdownitLineNumber, {
         startLine: 'data-line'
